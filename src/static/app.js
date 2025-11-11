@@ -10,8 +10,9 @@ document.addEventListener("DOMContentLoaded", () => {
       const response = await fetch("/activities");
       const activities = await response.json();
 
-      // Clear loading message
-      activitiesList.innerHTML = "";
+  // Clear loading message and previous select options
+  activitiesList.innerHTML = "";
+  activitySelect.innerHTML = '<option value="">-- Select an activity --</option>';
 
       // Populate activities list
       Object.entries(activities).forEach(([name, details]) => {
@@ -26,6 +27,75 @@ document.addEventListener("DOMContentLoaded", () => {
           <p><strong>Schedule:</strong> ${details.schedule}</p>
           <p><strong>Availability:</strong> ${spotsLeft} spots left</p>
         `;
+
+        // Participants section (added)
+        if (details.participants && details.participants.length) {
+          const participantsHeader = document.createElement("p");
+          participantsHeader.className = "participants-header";
+          participantsHeader.innerHTML = "<strong>Participants</strong>";
+
+          const ul = document.createElement("ul");
+          ul.className = "participants-list";
+
+          details.participants.forEach(p => {
+            const li = document.createElement("li");
+            li.className = "participant-item";
+
+            const span = document.createElement("span");
+            span.className = "participant-email";
+            span.textContent = p;
+
+            const delBtn = document.createElement("button");
+            delBtn.type = "button";
+            delBtn.className = "participant-delete";
+            delBtn.setAttribute('aria-label', `Remove ${p} from ${name}`);
+            // Use a simple trash emoji for the icon (works without external assets)
+            delBtn.textContent = "🗑️";
+
+            // Click handler to call DELETE endpoint
+            delBtn.addEventListener('click', async (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (!confirm(`Remove ${p} from ${name}?`)) return;
+              try {
+                const resp = await fetch(
+                  `/activities/${encodeURIComponent(name)}/participants?email=${encodeURIComponent(p)}`,
+                  { method: 'DELETE' }
+                );
+                const respJson = await resp.json();
+                if (resp.ok) {
+                  messageDiv.textContent = respJson.message;
+                  messageDiv.className = 'success';
+                  messageDiv.classList.remove('hidden');
+                  // Refresh activities to reflect change
+                  fetchActivities();
+                } else {
+                  messageDiv.textContent = respJson.detail || 'Failed to remove participant';
+                  messageDiv.className = 'error';
+                  messageDiv.classList.remove('hidden');
+                }
+                setTimeout(() => messageDiv.classList.add('hidden'), 4000);
+              } catch (err) {
+                console.error('Error removing participant:', err);
+                messageDiv.textContent = 'Error removing participant. Try again.';
+                messageDiv.className = 'error';
+                messageDiv.classList.remove('hidden');
+              }
+            });
+
+            li.appendChild(span);
+            li.appendChild(delBtn);
+            ul.appendChild(li);
+          });
+
+          activityCard.appendChild(participantsHeader);
+          activityCard.appendChild(ul);
+        } else {
+          const noP = document.createElement("p");
+          noP.className = "info small";
+          noP.textContent = "No participants yet";
+          activityCard.appendChild(noP);
+        }
 
         activitiesList.appendChild(activityCard);
 
@@ -62,6 +132,8 @@ document.addEventListener("DOMContentLoaded", () => {
         messageDiv.textContent = result.message;
         messageDiv.className = "success";
         signupForm.reset();
+        // Refresh activities to show updated participants / availability
+        fetchActivities();
       } else {
         messageDiv.textContent = result.detail || "An error occurred";
         messageDiv.className = "error";
