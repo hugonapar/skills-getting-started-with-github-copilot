@@ -142,3 +142,39 @@ footer {
   padding: 20px;
   color: #666;
 }
+
+/* Participants list styling */
+.participants-header {
+  margin-top: 12px;
+  margin-bottom: 8px;
+  color: #1a237e;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.participants-list {
+  list-style: disc;
+  padding-left: 20px;
+  margin: 0;
+  background: linear-gradient(180deg, rgba(26,35,126,0.03), transparent);
+  border-radius: 4px;
+  padding: 10px 12px;
+}
+
+.participants-list li {
+  padding: 6px 0;
+  border-bottom: 1px dashed rgba(0,0,0,0.06);
+  font-size: 0.95rem;
+  color: #333;
+}
+
+.participants-list li:last-child {
+  border-bottom: none;
+}
+
+/* small info text inside cards */
+.small {
+  font-size: 0.9rem;
+  color: #666;
+  margin-top: 8px;
+}
